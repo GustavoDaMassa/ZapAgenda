@@ -1,4 +1,4 @@
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, BadRequestException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { GlobalExceptionFilter } from './global-exception.filter';
 import { AppException } from '../exceptions/app.exception';
 import { NotFoundException } from '../exceptions/not-found.exception';
@@ -74,5 +74,22 @@ describe('GlobalExceptionFilter', () => {
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({ timestamp: expect.any(String) }),
     );
+  });
+
+  it('should handle NestJS BadRequestException with 400', () => {
+    const exception = new BadRequestException('Validation failed');
+    filter.catch(exception, mockHost);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 400 }),
+    );
+  });
+
+  it('should handle NestJS UnauthorizedException with 401', () => {
+    const exception = new UnauthorizedException();
+    filter.catch(exception, mockHost);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
   });
 });

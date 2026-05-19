@@ -29,7 +29,7 @@
 <summary><strong>src/common/filters/</strong></summary>
 
 - **global-exception.filter.ts** — Captura todas as exceções; AppException → status do erro, desconhecida → 500
-- **global-exception.filter.spec.ts** — Testes unitários do filter (4 casos: 404, conflict, 500, timestamp)
+- **global-exception.filter.spec.ts** — 6 testes: 404 via AppException, conflict, 500, timestamp, NestJS BadRequestException (400), NestJS UnauthorizedException (401)
 
 </details>
 
@@ -215,6 +215,7 @@
 - **src/database/typeorm.config.ts** — DataSource isolado para o TypeORM CLI (`migration:run`, `migration:revert`)
 - **src/database/migrations/1748000000000-CreateSchema.ts** — DDL completo: users, categories (+ seed), appointments, reminders, conversation_sessions; enums, FKs e índices
 - **src/app.module.ts** — Módulo raiz; TypeORM com `migrationsRun: true` em produção, `synchronize: true` em dev
+- **test/app.e2e-spec.ts** — Smoke test e2e com Testcontainers (PostgreSQL real); 8 testes: auth flow, proteção JWT, 404 com body padronizado
 - **src/main.ts** — Bootstrap da aplicação; registra ValidationPipe global, CORS e Swagger em `/api/docs`
 
 </details>
