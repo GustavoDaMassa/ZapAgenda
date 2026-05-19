@@ -31,3 +31,10 @@ Formato:
 - Correção: substituído por `jest.mock('bcrypt')` no topo do arquivo + cast `(bcrypt.compare as jest.Mock).mockResolvedValue(...)`
 
 ---
+
+**2026-05-19 · Fase 7 · GlobalExceptionFilter retornava 500 para exceções nativas do NestJS**
+- Erro: `POST /auth/login` com payload inválido retornava 500; `GET /categories` sem token retornava 500
+- Causa: `BadRequestException` (ValidationPipe) e `UnauthorizedException` (JWT guard) estendem `HttpException` do NestJS, não `AppException` — o filter só tratava `AppException` e jogava tudo mais para o bloco 500
+- Correção: adicionado branch `else if (exception instanceof HttpException)` no filter para tratar exceções nativas com seus status e mensagens originais
+
+---
