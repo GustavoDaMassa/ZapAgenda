@@ -153,7 +153,33 @@
 <details>
 <summary><strong>src/modules/reminders/</strong></summary>
 
-- *(a criar na Fase 5)*
+<details>
+<summary><strong>entities/</strong></summary>
+
+- **reminder.entity.ts** — Enum `ReminderStatus`; factory `Reminder.create()`; métodos `markAsSent()` e `markAsFailed()`
+- **reminder.entity.spec.ts** — 3 testes: defaults, markAsSent (seta sentAt), markAsFailed
+
+</details>
+
+<details>
+<summary><strong>dto/</strong></summary>
+
+- **create-reminder.dto.ts** — minutesBefore (int ≥ 1), scheduledFor (datestring)
+
+</details>
+
+<details>
+<summary><strong>exceptions/</strong></summary>
+
+- **reminder-not-found.exception.ts** — 404 com mensagem "Reminder with id {id} not found"
+
+</details>
+
+- **reminders.service.ts** — findByAppointment, create, remove (valida appointmentId + reminderId, lança 404)
+- **reminders.service.spec.ts** — 4 testes: findByAppointment, create, remove (ok/not found)
+- **reminders.controller.ts** — nested route: GET/POST/DELETE `/appointments/:appointmentId/reminders/:reminderId`
+- **reminders.controller.spec.ts** — 4 testes incluindo 404 propagado
+- **reminders.module.ts** — TypeORM(Reminder) + exports RemindersService
 
 </details>
 
