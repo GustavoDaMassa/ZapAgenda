@@ -11,16 +11,25 @@
 </details>
 
 <details>
+<summary><strong>src/common/dto/</strong></summary>
+
+- **error-response.dto.ts** — Shape padrão de erro retornado pela API: statusCode, error, message, timestamp, path
+
+</details>
+
+<details>
 <summary><strong>src/common/exceptions/</strong></summary>
 
-- *(a criar na Fase 4)*
+- **app.exception.ts** — Base de toda a hierarquia de exceções; estende HttpException com mensagem e status
+- **not-found.exception.ts** — Lança 404 com mensagem "{resource} not found"; domínios criam subclasses
 
 </details>
 
 <details>
 <summary><strong>src/common/filters/</strong></summary>
 
-- *(a criar na Fase 4)*
+- **global-exception.filter.ts** — Captura todas as exceções; AppException → status do erro, desconhecida → 500
+- **global-exception.filter.spec.ts** — Testes unitários do filter (4 casos: 404, conflict, 500, timestamp)
 
 </details>
 
