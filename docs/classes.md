@@ -111,7 +111,35 @@
 <details>
 <summary><strong>src/modules/appointments/</strong></summary>
 
-- *(a criar na Fase 5)*
+<details>
+<summary><strong>entities/</strong></summary>
+
+- **appointment.entity.ts** — Enums `RecurrenceRule`, `CreatedVia`; factory `Appointment.create()`; método `cancel()`
+- **appointment.entity.spec.ts** — 4 testes: defaults, createdVia, recorrência, cancel()
+
+</details>
+
+<details>
+<summary><strong>dto/</strong></summary>
+
+- **create-appointment.dto.ts** — title, startTime, categoryId (UUID), description?, endTime?, isRecurring?, recurrenceRule?, createdVia?
+- **update-appointment.dto.ts** — PartialType de CreateAppointmentDto
+- **find-appointments-query.dto.ts** — start?, end? (datestring), categoryId? (UUID) — filtros de listagem
+
+</details>
+
+<details>
+<summary><strong>exceptions/</strong></summary>
+
+- **appointment-not-found.exception.ts** — 404 com mensagem "Appointment with id {id} not found"
+
+</details>
+
+- **appointments.service.ts** — findAll (com filtros Between/categoryId), findOne (404), create, update, cancel
+- **appointments.service.spec.ts** — 8 testes cobrindo todos os métodos e casos de 404
+- **appointments.controller.ts** — GET /appointments?start&end&categoryId, GET /:id, POST, PATCH /:id, PATCH /:id/cancel
+- **appointments.controller.spec.ts** — 6 testes incluindo 404 propagado
+- **appointments.module.ts** — TypeORM(Appointment) + exports AppointmentsService
 
 </details>
 
