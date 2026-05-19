@@ -212,7 +212,9 @@
 </details>
 
 - **src/common/exceptions/unauthorized.exception.ts** — Lança 401 com mensagem configurável (padrão: "Invalid credentials")
-- **src/app.module.ts** — Módulo raiz; registra ConfigModule global, TypeOrmModule e AuthModule
+- **src/database/typeorm.config.ts** — DataSource isolado para o TypeORM CLI (`migration:run`, `migration:revert`)
+- **src/database/migrations/1748000000000-CreateSchema.ts** — DDL completo: users, categories (+ seed), appointments, reminders, conversation_sessions; enums, FKs e índices
+- **src/app.module.ts** — Módulo raiz; TypeORM com `migrationsRun: true` em produção, `synchronize: true` em dev
 - **src/main.ts** — Bootstrap da aplicação; registra ValidationPipe global, CORS e Swagger em `/api/docs`
 
 </details>
