@@ -74,6 +74,41 @@
 </details>
 
 <details>
+<summary><strong>src/modules/categories/</strong></summary>
+
+<details>
+<summary><strong>entities/</strong></summary>
+
+- **category.entity.ts** — Entidade TypeORM `categories`; factory `Category.create()`; campos: id, name, color, defaultReminderMinutes, isSystem
+- **category.entity.spec.ts** — Testes do factory: propriedades padrão, categoria de sistema, reminder minutes
+
+</details>
+
+<details>
+<summary><strong>dto/</strong></summary>
+
+- **create-category.dto.ts** — name (string), color (IsHexColor), defaultReminderMinutes (opcional, int ≥ 1)
+- **update-category.dto.ts** — PartialType de CreateCategoryDto
+
+</details>
+
+<details>
+<summary><strong>exceptions/</strong></summary>
+
+- **category-not-found.exception.ts** — 404 com mensagem "Category with id {id} not found"
+- **system-category.exception.ts** — 409 ao tentar deletar categoria de sistema
+
+</details>
+
+- **categories.service.ts** — findAll, findOne (lança 404), create, update, remove (lança 409 se isSystem)
+- **categories.service.spec.ts** — 8 testes: findAll, findOne (found/not found), create, update (found/not found), remove (ok/system/not found)
+- **categories.controller.ts** — GET /categories, GET /:id, POST, PATCH /:id, DELETE /:id — protegido por JwtAuthGuard
+- **categories.controller.spec.ts** — 6 testes: todos os endpoints + 404 propagado
+- **categories.module.ts** — TypeORM(Category) + exports CategoriesService
+
+</details>
+
+<details>
 <summary><strong>src/modules/appointments/</strong></summary>
 
 - *(a criar na Fase 5)*
