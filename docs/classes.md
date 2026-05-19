@@ -36,7 +36,40 @@
 <details>
 <summary><strong>src/modules/auth/</strong></summary>
 
-- *(a criar na Fase 4)*
+<details>
+<summary><strong>entities/</strong></summary>
+
+- **user.entity.ts** — Entidade TypeORM `users`; campos: id (uuid), email (unique), passwordHash
+
+</details>
+
+<details>
+<summary><strong>dto/</strong></summary>
+
+- **login.dto.ts** — Payload do POST /auth/login: email (IsEmail) + password (MinLength 6)
+- **refresh.dto.ts** — Payload do POST /auth/refresh: refreshToken (IsString)
+
+</details>
+
+<details>
+<summary><strong>strategies/</strong></summary>
+
+- **jwt.strategy.ts** — PassportStrategy JWT; extrai token do header Bearer e valida com jwt.secret
+
+</details>
+
+<details>
+<summary><strong>guards/</strong></summary>
+
+- **jwt-auth.guard.ts** — AuthGuard('jwt'); aplica em rotas que exigem autenticação
+
+</details>
+
+- **auth.service.ts** — login (valida credenciais, gera tokens), refresh (verifica refreshToken, gera novos tokens)
+- **auth.service.spec.ts** — Testes unitários: login válido, usuário inexistente, senha errada
+- **auth.controller.ts** — POST /auth/login e POST /auth/refresh; documentado com Swagger
+- **auth.controller.spec.ts** — Testes unitários: login e refresh delegam para AuthService
+- **auth.module.ts** — Registra TypeORM(User), PassportModule, JwtModule (async), estratégia e guard
 
 </details>
 
@@ -89,7 +122,8 @@
 
 </details>
 
-- **src/app.module.ts** — Módulo raiz; registra ConfigModule global e TypeOrmModule com configuração assíncrona
+- **src/common/exceptions/unauthorized.exception.ts** — Lança 401 com mensagem configurável (padrão: "Invalid credentials")
+- **src/app.module.ts** — Módulo raiz; registra ConfigModule global, TypeOrmModule e AuthModule
 - **src/main.ts** — Bootstrap da aplicação; registra ValidationPipe global, CORS e Swagger em `/api/docs`
 
 </details>
