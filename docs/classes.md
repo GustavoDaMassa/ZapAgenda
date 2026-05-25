@@ -1,4 +1,4 @@
-# ZapZap — Classes e Estrutura
+# ZapAgenda — Classes e Estrutura
 
 <details>
 <summary><strong>api/</strong> — NestJS Backend</summary>

@@ -1,4 +1,4 @@
-# ZapZap — Requisitos
+# ZapAgenda — Requisitos
 
 ## Requisitos Funcionais
 
