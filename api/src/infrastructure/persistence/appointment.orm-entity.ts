@@ -1,0 +1,44 @@
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { CategoryOrmEntity } from './category.orm-entity';
+
+@Entity('appointments')
+export class AppointmentOrmEntity {
+  @PrimaryColumn('uuid')
+  id: string;
+
+  @Column()
+  title: string;
+
+  @Column({ nullable: true, type: 'text' })
+  description: string | null;
+
+  @Column({ name: 'start_time', type: 'timestamptz' })
+  startTime: Date;
+
+  @Column({ name: 'end_time', type: 'timestamptz', nullable: true })
+  endTime: Date | null;
+
+  @Column({ name: 'category_id', type: 'uuid' })
+  categoryId: string;
+
+  @ManyToOne(() => CategoryOrmEntity)
+  category: CategoryOrmEntity;
+
+  @Column({ name: 'is_recurring', default: false })
+  isRecurring: boolean;
+
+  @Column({ name: 'recurrence_rule', nullable: true })
+  recurrenceRule: string | null;
+
+  @Column({ name: 'is_cancelled', default: false })
+  isCancelled: boolean;
+
+  @Column({ name: 'created_via' })
+  createdVia: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  updatedAt: Date;
+}
