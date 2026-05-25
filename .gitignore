@@ -41,3 +41,12 @@ api/baileys_auth_info/
 
 # Docker
 *.pid
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
