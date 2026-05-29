@@ -5,6 +5,7 @@ import configuration from './config/configuration';
 import { AuthModule } from './presentation/modules/auth.module';
 import { CategoriesModule } from './presentation/modules/categories.module';
 import { AppointmentsModule } from './presentation/modules/appointments.module';
+import { RemindersModule } from './presentation/modules/reminders.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AppointmentsModule } from './presentation/modules/appointments.module';
     AuthModule,
     CategoriesModule,
     AppointmentsModule,
+    RemindersModule,
   ],
 })
 export class AppModule {}
