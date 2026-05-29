@@ -7,15 +7,18 @@ import { DeleteReminderUseCase } from '../../application/use-cases/reminder/dele
 import { ReminderRepository } from '../../infrastructure/persistence/reminder.repository';
 import { ReminderOrmEntity } from '../../infrastructure/persistence/reminder.orm-entity';
 import { REMINDER_REPOSITORY } from '../../domain/repositories/reminder.repository.interface';
+import { REMINDER_QUEUE } from '../../domain/queue/reminder-queue.interface';
 import { AppointmentsModule } from './appointments.module';
 import { APPOINTMENT_REPOSITORY } from '../../domain/repositories/appointment.repository.interface';
 import { AuthModule } from './auth.module';
+import { QueueModule } from '../../infrastructure/queue/queue.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ReminderOrmEntity]),
     AppointmentsModule,
     AuthModule,
+    QueueModule,
   ],
   controllers: [RemindersController],
   providers: [
@@ -28,9 +31,9 @@ import { AuthModule } from './auth.module';
     },
     {
       provide: CreateReminderUseCase,
-      useFactory: (reminderRepo: ReminderRepository, apptRepo: any) =>
-        new CreateReminderUseCase(reminderRepo, apptRepo),
-      inject: [REMINDER_REPOSITORY, APPOINTMENT_REPOSITORY],
+      useFactory: (reminderRepo: ReminderRepository, apptRepo: any, queue: any) =>
+        new CreateReminderUseCase(reminderRepo, apptRepo, queue),
+      inject: [REMINDER_REPOSITORY, APPOINTMENT_REPOSITORY, REMINDER_QUEUE],
     },
     {
       provide: DeleteReminderUseCase,
