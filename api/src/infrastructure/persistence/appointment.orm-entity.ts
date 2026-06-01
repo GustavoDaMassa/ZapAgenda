@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 import { CategoryOrmEntity } from './category.orm-entity';
+import { UserOrmEntity } from './user.orm-entity';
 
 @Entity('appointments')
 export class AppointmentOrmEntity {
@@ -23,6 +24,12 @@ export class AppointmentOrmEntity {
 
   @ManyToOne(() => CategoryOrmEntity)
   category: CategoryOrmEntity;
+
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
+  @ManyToOne(() => UserOrmEntity)
+  user: UserOrmEntity;
 
   @Column({ name: 'is_recurring', default: false })
   isRecurring: boolean;

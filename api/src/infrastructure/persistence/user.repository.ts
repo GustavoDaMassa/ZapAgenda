@@ -14,15 +14,29 @@ export class UserRepository implements IUserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     const row = await this.repo.findOneBy({ email });
-    return row ? User.reconstitute(row.id, row.email, row.passwordHash) : null;
+    return row ? this.toDomain(row) : null;
   }
 
   async findById(id: string): Promise<User | null> {
     const row = await this.repo.findOneBy({ id });
-    return row ? User.reconstitute(row.id, row.email, row.passwordHash) : null;
+    return row ? this.toDomain(row) : null;
+  }
+
+  async findByWhatsappJid(jid: string): Promise<User | null> {
+    const row = await this.repo.findOneBy({ whatsappJid: jid });
+    return row ? this.toDomain(row) : null;
   }
 
   async save(user: User): Promise<void> {
-    await this.repo.save({ id: user.id, email: user.email, passwordHash: user.passwordHash });
+    await this.repo.save({
+      id: user.id,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      whatsappJid: user.whatsappJid,
+    });
+  }
+
+  private toDomain(row: UserOrmEntity): User {
+    return User.reconstitute(row.id, row.email, row.passwordHash, row.whatsappJid);
   }
 }

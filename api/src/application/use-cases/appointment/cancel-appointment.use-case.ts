@@ -4,9 +4,10 @@ import { NotFoundException } from '../../../domain/exceptions/not-found.exceptio
 export class CancelAppointmentUseCase {
   constructor(private readonly repo: IAppointmentRepository) {}
 
-  async execute(id: string): Promise<void> {
+  async execute(id: string, userId: string): Promise<void> {
     const appointment = await this.repo.findById(id);
-    if (!appointment) throw new NotFoundException('Appointment', id);
+    if (!appointment || !appointment.isOwnedBy(userId))
+      throw new NotFoundException('Appointment', id);
 
     appointment.cancel();
     await this.repo.save(appointment);

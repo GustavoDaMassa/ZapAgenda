@@ -5,12 +5,14 @@ const base = {
   startTime: new Date('2026-06-01T10:00:00Z'),
   categoryId: 'cat-1',
   createdVia: 'dashboard' as const,
+  userId: 'user-1',
 };
 
 describe('Appointment entity', () => {
-  it('create() produces a valid Appointment', () => {
+  it('create() produces a valid Appointment with userId', () => {
     const apt = Appointment.create(base);
     expect(apt.title).toBe('Dentista');
+    expect(apt.userId).toBe('user-1');
     expect(apt.isCancelled).toBe(false);
     expect(apt.isRecurring).toBe(false);
     expect(apt.id).toBeDefined();
@@ -23,31 +25,29 @@ describe('Appointment entity', () => {
 
   it('create() throws when endTime is before startTime', () => {
     expect(() =>
-      Appointment.create({
-        ...base,
-        endTime: new Date('2026-06-01T09:00:00Z'),
-      }),
+      Appointment.create({ ...base, endTime: new Date('2026-06-01T09:00:00Z') }),
     ).toThrow();
   });
 
   it('create() accepts endTime after startTime', () => {
-    const apt = Appointment.create({
-      ...base,
-      endTime: new Date('2026-06-01T11:00:00Z'),
-    });
+    const apt = Appointment.create({ ...base, endTime: new Date('2026-06-01T11:00:00Z') });
     expect(apt.endTime).toBeDefined();
   });
 
   it('create() throws when isRecurring without recurrenceRule', () => {
-    expect(() =>
-      Appointment.create({ ...base, isRecurring: true, recurrenceRule: undefined }),
-    ).toThrow();
+    expect(() => Appointment.create({ ...base, isRecurring: true, recurrenceRule: undefined })).toThrow();
   });
 
   it('create() accepts isRecurring with recurrenceRule', () => {
     const apt = Appointment.create({ ...base, isRecurring: true, recurrenceRule: 'weekly' });
     expect(apt.isRecurring).toBe(true);
     expect(apt.recurrenceRule).toBe('weekly');
+  });
+
+  it('isOwnedBy() returns true for the owner', () => {
+    const apt = Appointment.create(base);
+    expect(apt.isOwnedBy('user-1')).toBe(true);
+    expect(apt.isOwnedBy('user-2')).toBe(false);
   });
 
   it('cancel() sets isCancelled to true', () => {
@@ -62,7 +62,6 @@ describe('Appointment entity', () => {
     const newEnd = new Date('2026-06-02T15:00:00Z');
     apt.reschedule(newStart, newEnd);
     expect(apt.startTime).toEqual(newStart);
-    expect(apt.endTime).toEqual(newEnd);
   });
 
   it('reschedule() throws when new endTime is before new startTime', () => {

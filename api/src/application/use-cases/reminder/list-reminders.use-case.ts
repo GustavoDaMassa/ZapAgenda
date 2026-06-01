@@ -9,9 +9,10 @@ export class ListRemindersUseCase {
     private readonly appointmentRepo: IAppointmentRepository,
   ) {}
 
-  async execute(appointmentId: string): Promise<Reminder[]> {
+  async execute(appointmentId: string, userId: string): Promise<Reminder[]> {
     const appointment = await this.appointmentRepo.findById(appointmentId);
-    if (!appointment) throw new NotFoundException('Appointment', appointmentId);
+    if (!appointment || !appointment.isOwnedBy(userId))
+      throw new NotFoundException('Appointment', appointmentId);
     return this.reminderRepo.findByAppointment(appointmentId);
   }
 }

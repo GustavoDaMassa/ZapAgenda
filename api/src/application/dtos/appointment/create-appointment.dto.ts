@@ -1,8 +1,7 @@
 import { Type } from 'class-transformer';
 import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import type { CreatedVia, RecurrenceRule } from '../../../domain/entities/appointment.entity';
+import type { RecurrenceRule } from '../../../domain/entities/appointment.entity';
 
-const CREATED_VIA = ['whatsapp', 'dashboard'] as const;
 const RECURRENCE_RULES = ['daily', 'weekly', 'monthly'] as const;
 
 export class CreateAppointmentDto {
@@ -16,9 +15,6 @@ export class CreateAppointmentDto {
 
   @IsUUID()
   categoryId: string;
-
-  @IsEnum(CREATED_VIA)
-  createdVia: CreatedVia;
 
   @IsOptional()
   @IsString()

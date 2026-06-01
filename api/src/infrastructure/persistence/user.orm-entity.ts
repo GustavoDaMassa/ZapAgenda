@@ -10,4 +10,7 @@ export class UserOrmEntity {
 
   @Column({ name: 'password_hash' })
   passwordHash: string;
+
+  @Column({ name: 'whatsapp_jid', nullable: true, unique: true })
+  whatsappJid: string | null;
 }

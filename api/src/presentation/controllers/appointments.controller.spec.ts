@@ -9,12 +9,15 @@ import { Appointment } from '../../domain/entities/appointment.entity';
 import { NotFoundException } from '../../domain/exceptions/not-found.exception';
 import { ConflictException } from '../../domain/exceptions/conflict.exception';
 
+const USER_ID = 'user-1';
+
 const makeAppointment = () =>
   Appointment.create({
     title: 'Dentista',
     startTime: new Date('2026-06-01T10:00:00Z'),
     categoryId: 'cat-1',
     createdVia: 'dashboard',
+    userId: USER_ID,
   });
 
 const mockList = { execute: jest.fn() };
@@ -44,71 +47,61 @@ describe('AppointmentsController', () => {
 
   it('GET / returns list of appointments', async () => {
     mockList.execute.mockResolvedValue([makeAppointment()]);
-    const result = await controller.findAll({});
+    const result = await controller.findAll({}, USER_ID);
     expect(result).toHaveLength(1);
+    expect(mockList.execute).toHaveBeenCalledWith({}, USER_ID);
   });
 
   it('GET /:id returns appointment', async () => {
     const apt = makeAppointment();
     mockGet.execute.mockResolvedValue(apt);
-    const result = await controller.findOne(apt.id);
+    const result = await controller.findOne(apt.id, USER_ID);
     expect(result.id).toBe(apt.id);
   });
 
   it('GET /:id propagates NotFoundException', async () => {
     mockGet.execute.mockRejectedValue(new NotFoundException('Appointment', 'ghost'));
-    await expect(controller.findOne('ghost')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.findOne('ghost', USER_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('POST / creates an appointment', async () => {
     const apt = makeAppointment();
     mockCreate.execute.mockResolvedValue(apt);
-    const result = await controller.create({
-      title: 'Dentista',
-      startTime: new Date('2026-06-01T10:00:00Z'),
-      categoryId: 'cat-1',
-      createdVia: 'dashboard',
-    });
+    const result = await controller.create(
+      { title: 'Dentista', startTime: new Date('2026-06-01T10:00:00Z'), categoryId: 'cat-1' },
+      USER_ID,
+    );
     expect(result).toBe(apt);
   });
 
   it('POST / propagates ConflictException', async () => {
     mockCreate.execute.mockRejectedValue(new ConflictException('time conflict'));
     await expect(
-      controller.create({
-        title: 'X',
-        startTime: new Date(),
-        categoryId: 'cat-1',
-        createdVia: 'dashboard',
-      }),
+      controller.create({ title: 'X', startTime: new Date(), categoryId: 'cat-1' }, USER_ID),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('PATCH /:id updates appointment', async () => {
     const apt = makeAppointment();
     mockUpdate.execute.mockResolvedValue(apt);
-    const result = await controller.update(apt.id, {
-      title: 'Médico',
-      startTime: new Date(),
-      categoryId: 'cat-1',
-    });
+    const result = await controller.update(apt.id, { title: 'Médico', startTime: new Date(), categoryId: 'cat-1' }, USER_ID);
     expect(result).toBe(apt);
   });
 
   it('PATCH /:id propagates NotFoundException', async () => {
     mockUpdate.execute.mockRejectedValue(new NotFoundException('Appointment', 'ghost'));
     await expect(
-      controller.update('ghost', { title: 'X', startTime: new Date(), categoryId: 'cat-1' }),
+      controller.update('ghost', { title: 'X', startTime: new Date(), categoryId: 'cat-1' }, USER_ID),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('DELETE /:id cancels appointment', async () => {
     mockCancel.execute.mockResolvedValue(undefined);
-    await expect(controller.cancel('some-id')).resolves.toBeUndefined();
+    await expect(controller.cancel('some-id', USER_ID)).resolves.toBeUndefined();
   });
 
   it('DELETE /:id propagates NotFoundException', async () => {
     mockCancel.execute.mockRejectedValue(new NotFoundException('Appointment', 'ghost'));
-    await expect(controller.cancel('ghost')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.cancel('ghost', USER_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 });

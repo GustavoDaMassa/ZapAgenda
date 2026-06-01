@@ -10,8 +10,8 @@ export interface CreateCategoryInput {
 export class CreateCategoryUseCase {
   constructor(private readonly repo: ICategoryRepository) {}
 
-  async execute(input: CreateCategoryInput): Promise<Category> {
-    const category = Category.create(input.name, input.color, input.defaultReminderMinutes);
+  async execute(input: CreateCategoryInput, userId: string): Promise<Category> {
+    const category = Category.create(input.name, input.color, userId, input.defaultReminderMinutes);
     await this.repo.save(category);
     return category;
   }

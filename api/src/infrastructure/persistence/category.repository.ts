@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Or, Repository } from 'typeorm';
 import { ICategoryRepository } from '../../domain/repositories/category.repository.interface';
 import { Category } from '../../domain/entities/category.entity';
 import { CategoryOrmEntity } from './category.orm-entity';
@@ -12,18 +12,16 @@ export class CategoryRepository implements ICategoryRepository {
     private readonly repo: Repository<CategoryOrmEntity>,
   ) {}
 
-  async findAll(): Promise<Category[]> {
-    const rows = await this.repo.find();
-    return rows.map((r) =>
-      Category.reconstitute(r.id, r.name, r.color, r.defaultReminderMinutes, r.isSystem),
-    );
+  async findAll(userId: string): Promise<Category[]> {
+    const rows = await this.repo.find({
+      where: [{ userId }, { userId: IsNull() }],
+    });
+    return rows.map(this.toDomain);
   }
 
   async findById(id: string): Promise<Category | null> {
     const row = await this.repo.findOneBy({ id });
-    return row
-      ? Category.reconstitute(row.id, row.name, row.color, row.defaultReminderMinutes, row.isSystem)
-      : null;
+    return row ? this.toDomain(row) : null;
   }
 
   async save(category: Category): Promise<void> {
@@ -33,10 +31,22 @@ export class CategoryRepository implements ICategoryRepository {
       color: category.color,
       defaultReminderMinutes: category.defaultReminderMinutes,
       isSystem: category.isSystem,
+      userId: category.userId,
     });
   }
 
   async delete(id: string): Promise<void> {
     await this.repo.delete(id);
+  }
+
+  private toDomain(row: CategoryOrmEntity): Category {
+    return Category.reconstitute(
+      row.id,
+      row.name,
+      row.color,
+      row.defaultReminderMinutes,
+      row.isSystem,
+      row.userId,
+    );
   }
 }
