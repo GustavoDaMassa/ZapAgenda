@@ -5,11 +5,7 @@ import {
   AppointmentFilters,
   IAppointmentRepository,
 } from '../../domain/repositories/appointment.repository.interface';
-import {
-  Appointment,
-  CreatedVia,
-  RecurrenceRule,
-} from '../../domain/entities/appointment.entity';
+import { Appointment, CreatedVia, RecurrenceRule } from '../../domain/entities/appointment.entity';
 import { AppointmentOrmEntity } from './appointment.orm-entity';
 
 @Injectable()
@@ -20,7 +16,7 @@ export class AppointmentRepository implements IAppointmentRepository {
   ) {}
 
   async findAll(filters: AppointmentFilters): Promise<Appointment[]> {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { userId: filters.userId };
     if (filters.categoryId) where['categoryId'] = filters.categoryId;
     if (filters.start && filters.end)
       where['startTime'] = Between(filters.start, filters.end);
@@ -36,10 +32,11 @@ export class AppointmentRepository implements IAppointmentRepository {
     return row ? this.toDomain(row) : null;
   }
 
-  async findOverlapping(startTime: Date, endTime: Date, excludeId?: string): Promise<Appointment[]> {
+  async findOverlapping(startTime: Date, endTime: Date, userId: string, excludeId?: string): Promise<Appointment[]> {
     const qb = this.repo
       .createQueryBuilder('a')
-      .where('a.is_cancelled = false')
+      .where('a.user_id = :userId', { userId })
+      .andWhere('a.is_cancelled = false')
       .andWhere('a.start_time < :end AND (a.end_time IS NULL OR a.end_time > :start)', {
         start: startTime,
         end: endTime,
@@ -59,6 +56,7 @@ export class AppointmentRepository implements IAppointmentRepository {
       startTime: appointment.startTime,
       endTime: appointment.endTime,
       categoryId: appointment.categoryId,
+      userId: appointment.userId,
       isRecurring: appointment.isRecurring,
       recurrenceRule: appointment.recurrenceRule,
       isCancelled: appointment.isCancelled,
@@ -72,18 +70,11 @@ export class AppointmentRepository implements IAppointmentRepository {
 
   private toDomain(row: AppointmentOrmEntity): Appointment {
     return Appointment.reconstitute(
-      row.id,
-      row.title,
-      row.description,
-      row.startTime,
-      row.endTime,
-      row.categoryId,
-      row.isRecurring,
-      row.recurrenceRule as RecurrenceRule | null,
-      row.isCancelled,
-      row.createdVia as CreatedVia,
-      row.createdAt,
-      row.updatedAt,
+      row.id, row.title, row.description,
+      row.startTime, row.endTime, row.categoryId,
+      row.isRecurring, row.recurrenceRule as RecurrenceRule | null,
+      row.isCancelled, row.createdVia as CreatedVia, row.userId,
+      row.createdAt, row.updatedAt,
     );
   }
 }

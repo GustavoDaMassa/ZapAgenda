@@ -1,18 +1,9 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseUUIDPipe,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus,
+  Param, ParseUUIDPipe, Patch, Post, Query, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
+import { CurrentUserId } from '../../infrastructure/auth/current-user.decorator';
 import { ListAppointmentsUseCase } from '../../application/use-cases/appointment/list-appointments.use-case';
 import { GetAppointmentUseCase } from '../../application/use-cases/appointment/get-appointment.use-case';
 import { CreateAppointmentUseCase } from '../../application/use-cases/appointment/create-appointment.use-case';
@@ -35,32 +26,45 @@ export class AppointmentsController {
   ) {}
 
   @Get()
-  findAll(@Query() query: FindAppointmentsQueryDto): Promise<Appointment[]> {
-    return this.listUseCase.execute(query);
+  findAll(
+    @Query() query: FindAppointmentsQueryDto,
+    @CurrentUserId() userId: string,
+  ): Promise<Appointment[]> {
+    return this.listUseCase.execute(query, userId);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Appointment> {
-    return this.getUseCase.execute(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUserId() userId: string,
+  ): Promise<Appointment> {
+    return this.getUseCase.execute(id, userId);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() dto: CreateAppointmentDto): Promise<Appointment> {
-    return this.createUseCase.execute(dto);
+  create(
+    @Body() dto: CreateAppointmentDto,
+    @CurrentUserId() userId: string,
+  ): Promise<Appointment> {
+    return this.createUseCase.execute({ ...dto, userId, createdVia: 'dashboard' });
   }
 
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAppointmentDto,
+    @CurrentUserId() userId: string,
   ): Promise<Appointment> {
-    return this.updateUseCase.execute(id, dto);
+    return this.updateUseCase.execute(id, dto, userId);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  cancel(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.cancelUseCase.execute(id);
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUserId() userId: string,
+  ): Promise<void> {
+    return this.cancelUseCase.execute(id, userId);
   }
 }

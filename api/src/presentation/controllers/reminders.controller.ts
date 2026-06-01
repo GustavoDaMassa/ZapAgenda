@@ -1,16 +1,9 @@
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  UseGuards,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus,
+  Param, ParseUUIDPipe, Post, UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../infrastructure/auth/jwt-auth.guard';
+import { CurrentUserId } from '../../infrastructure/auth/current-user.decorator';
 import { ListRemindersUseCase } from '../../application/use-cases/reminder/list-reminders.use-case';
 import { CreateReminderUseCase } from '../../application/use-cases/reminder/create-reminder.use-case';
 import { DeleteReminderUseCase } from '../../application/use-cases/reminder/delete-reminder.use-case';
@@ -27,8 +20,11 @@ export class RemindersController {
   ) {}
 
   @Get()
-  findAll(@Param('appointmentId', ParseUUIDPipe) appointmentId: string): Promise<Reminder[]> {
-    return this.listUseCase.execute(appointmentId);
+  findAll(
+    @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
+    @CurrentUserId() userId: string,
+  ): Promise<Reminder[]> {
+    return this.listUseCase.execute(appointmentId, userId);
   }
 
   @Post()
@@ -36,8 +32,9 @@ export class RemindersController {
   create(
     @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
     @Body() dto: CreateReminderDto,
+    @CurrentUserId() userId: string,
   ): Promise<Reminder> {
-    return this.createUseCase.execute(appointmentId, dto);
+    return this.createUseCase.execute(appointmentId, dto, userId);
   }
 
   @Delete(':reminderId')
@@ -45,7 +42,8 @@ export class RemindersController {
   remove(
     @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
     @Param('reminderId', ParseUUIDPipe) reminderId: string,
+    @CurrentUserId() userId: string,
   ): Promise<void> {
-    return this.deleteUseCase.execute(appointmentId, reminderId);
+    return this.deleteUseCase.execute(appointmentId, reminderId, userId);
   }
 }

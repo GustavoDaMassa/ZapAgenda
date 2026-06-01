@@ -16,4 +16,7 @@ export class CategoryOrmEntity {
 
   @Column({ name: 'is_system', default: false })
   isSystem: boolean;
+
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string | null;
 }

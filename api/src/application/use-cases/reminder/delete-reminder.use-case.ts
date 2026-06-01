@@ -9,9 +9,10 @@ export class DeleteReminderUseCase {
     private readonly appointmentRepo: IAppointmentRepository,
   ) {}
 
-  async execute(appointmentId: string, reminderId: string): Promise<void> {
+  async execute(appointmentId: string, reminderId: string, userId: string): Promise<void> {
     const appointment = await this.appointmentRepo.findById(appointmentId);
-    if (!appointment) throw new NotFoundException('Appointment', appointmentId);
+    if (!appointment || !appointment.isOwnedBy(userId))
+      throw new NotFoundException('Appointment', appointmentId);
 
     const reminder = await this.reminderRepo.findById(reminderId);
     if (!reminder) throw new ReminderNotFoundException(reminderId);

@@ -4,7 +4,7 @@ import { Category } from '../../../domain/entities/category.entity';
 export class ListCategoriesUseCase {
   constructor(private readonly repo: ICategoryRepository) {}
 
-  execute(): Promise<Category[]> {
-    return this.repo.findAll();
+  execute(userId: string): Promise<Category[]> {
+    return this.repo.findAll(userId);
   }
 }

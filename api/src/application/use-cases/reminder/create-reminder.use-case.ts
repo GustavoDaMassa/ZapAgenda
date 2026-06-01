@@ -12,9 +12,10 @@ export class CreateReminderUseCase {
     private readonly reminderQueue: IReminderQueue | null = null,
   ) {}
 
-  async execute(appointmentId: string, dto: CreateReminderDto): Promise<Reminder> {
+  async execute(appointmentId: string, dto: CreateReminderDto, userId: string): Promise<Reminder> {
     const appointment = await this.appointmentRepo.findById(appointmentId);
-    if (!appointment) throw new NotFoundException('Appointment', appointmentId);
+    if (!appointment || !appointment.isOwnedBy(userId))
+      throw new NotFoundException('Appointment', appointmentId);
 
     const scheduledFor = new Date(dto.scheduledFor);
     const reminder = Reminder.create({ appointmentId, minutesBefore: dto.minutesBefore, scheduledFor });

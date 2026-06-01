@@ -7,10 +7,9 @@ import { Reminder } from '../../domain/entities/reminder.entity';
 import { NotFoundException } from '../../domain/exceptions/not-found.exception';
 import { ReminderNotFoundException } from '../../domain/exceptions/reminder-not-found.exception';
 
+const USER_ID = 'user-1';
 const futureDate = () => new Date(Date.now() + 60 * 60 * 1000);
-
-const makeReminder = () =>
-  Reminder.create({ appointmentId: 'appt-1', minutesBefore: 30, scheduledFor: futureDate() });
+const makeReminder = () => Reminder.create({ appointmentId: 'appt-1', minutesBefore: 30, scheduledFor: futureDate() });
 
 const mockList = { execute: jest.fn() };
 const mockCreate = { execute: jest.fn() };
@@ -35,34 +34,31 @@ describe('RemindersController', () => {
 
   it('GET returns reminders for appointment', async () => {
     mockList.execute.mockResolvedValue([makeReminder()]);
-    const result = await controller.findAll('appt-1');
+    const result = await controller.findAll('appt-1', USER_ID);
     expect(result).toHaveLength(1);
-    expect(mockList.execute).toHaveBeenCalledWith('appt-1');
+    expect(mockList.execute).toHaveBeenCalledWith('appt-1', USER_ID);
   });
 
-  it('GET propagates NotFoundException when appointment not found', async () => {
+  it('GET propagates NotFoundException', async () => {
     mockList.execute.mockRejectedValue(new NotFoundException('Appointment', 'ghost'));
-    await expect(controller.findAll('ghost')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.findAll('ghost', USER_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('POST creates a reminder', async () => {
     const r = makeReminder();
     mockCreate.execute.mockResolvedValue(r);
-    const result = await controller.create('appt-1', {
-      minutesBefore: 30,
-      scheduledFor: futureDate().toISOString(),
-    });
+    const result = await controller.create('appt-1', { minutesBefore: 30, scheduledFor: futureDate().toISOString() }, USER_ID);
     expect(result).toBe(r);
   });
 
   it('DELETE removes a reminder', async () => {
     mockDelete.execute.mockResolvedValue(undefined);
-    await expect(controller.remove('appt-1', 'rem-1')).resolves.toBeUndefined();
-    expect(mockDelete.execute).toHaveBeenCalledWith('appt-1', 'rem-1');
+    await expect(controller.remove('appt-1', 'rem-1', USER_ID)).resolves.toBeUndefined();
+    expect(mockDelete.execute).toHaveBeenCalledWith('appt-1', 'rem-1', USER_ID);
   });
 
   it('DELETE propagates ReminderNotFoundException', async () => {
     mockDelete.execute.mockRejectedValue(new ReminderNotFoundException('ghost'));
-    await expect(controller.remove('appt-1', 'ghost')).rejects.toBeInstanceOf(ReminderNotFoundException);
+    await expect(controller.remove('appt-1', 'ghost', USER_ID)).rejects.toBeInstanceOf(ReminderNotFoundException);
   });
 });

@@ -9,6 +9,7 @@ const makeUser = () => User.create('test@example.com', 'hashed');
 const mockUserRepo = (): jest.Mocked<IUserRepository> => ({
   findByEmail: jest.fn(),
   findById: jest.fn(),
+  findByWhatsappJid: jest.fn(),
   save: jest.fn(),
 });
 

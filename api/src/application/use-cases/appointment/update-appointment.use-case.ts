@@ -14,23 +14,17 @@ export interface UpdateAppointmentInput {
 export class UpdateAppointmentUseCase {
   constructor(private readonly repo: IAppointmentRepository) {}
 
-  async execute(id: string, input: UpdateAppointmentInput): Promise<Appointment> {
+  async execute(id: string, input: UpdateAppointmentInput, userId: string): Promise<Appointment> {
     const appointment = await this.repo.findById(id);
-    if (!appointment) throw new NotFoundException('Appointment', id);
+    if (!appointment || !appointment.isOwnedBy(userId))
+      throw new NotFoundException('Appointment', id);
 
     const endTime = input.endTime ?? new Date(input.startTime.getTime() + 60 * 60 * 1000);
-    const overlapping = await this.repo.findOverlapping(input.startTime, endTime, id);
-    if (overlapping.length > 0) {
+    const overlapping = await this.repo.findOverlapping(input.startTime, endTime, userId, id);
+    if (overlapping.length > 0)
       throw new ConflictException('There is already an appointment in this time slot');
-    }
 
-    appointment.update(
-      input.title,
-      input.description ?? null,
-      input.startTime,
-      input.endTime ?? null,
-      input.categoryId,
-    );
+    appointment.update(input.title, input.description ?? null, input.startTime, input.endTime ?? null, input.categoryId);
     await this.repo.save(appointment);
     return appointment;
   }

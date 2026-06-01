@@ -7,10 +7,9 @@ import { DeleteCategoryUseCase } from '../../application/use-cases/category/dele
 import { Category } from '../../domain/entities/category.entity';
 import { NotFoundException } from '../../domain/exceptions/not-found.exception';
 import { ForbiddenException } from '../../domain/exceptions/forbidden.exception';
-import { GlobalExceptionFilter } from '../filters/global-exception.filter';
-import { HttpAdapterHost } from '@nestjs/core';
 
-const makeCategory = () => Category.create('Saúde', '#FF0000');
+const USER_ID = 'user-1';
+const makeCategory = () => Category.create('Saúde', '#FF0000', USER_ID);
 
 const mockList = { execute: jest.fn() };
 const mockCreate = { execute: jest.fn() };
@@ -37,43 +36,42 @@ describe('CategoriesController', () => {
 
   it('GET / returns list of categories', async () => {
     mockList.execute.mockResolvedValue([makeCategory()]);
-    const result = await controller.findAll();
+    const result = await controller.findAll(USER_ID);
     expect(result).toHaveLength(1);
+    expect(mockList.execute).toHaveBeenCalledWith(USER_ID);
   });
 
   it('POST / creates a category', async () => {
     const cat = makeCategory();
     mockCreate.execute.mockResolvedValue(cat);
-    const result = await controller.create({ name: 'Saúde', color: '#FF0000' });
+    const result = await controller.create({ name: 'Saúde', color: '#FF0000' }, USER_ID);
     expect(result).toBe(cat);
   });
 
   it('PATCH /:id updates a category', async () => {
     const cat = makeCategory();
     mockUpdate.execute.mockResolvedValue(cat);
-    const result = await controller.update(cat.id, { name: 'Novo', color: '#FFFFFF' });
+    const result = await controller.update(cat.id, { name: 'Novo', color: '#FFFFFF' }, USER_ID);
     expect(result).toBe(cat);
   });
 
   it('PATCH /:id propagates NotFoundException', async () => {
     mockUpdate.execute.mockRejectedValue(new NotFoundException('Category', 'ghost'));
-    await expect(controller.update('ghost', { name: 'X', color: '#FFFFFF' })).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(controller.update('ghost', { name: 'X', color: '#FFFFFF' }, USER_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('DELETE /:id deletes a category', async () => {
     mockDelete.execute.mockResolvedValue(undefined);
-    await expect(controller.remove('some-id')).resolves.toBeUndefined();
+    await expect(controller.remove('some-id', USER_ID)).resolves.toBeUndefined();
   });
 
   it('DELETE /:id propagates NotFoundException', async () => {
     mockDelete.execute.mockRejectedValue(new NotFoundException('Category', 'ghost'));
-    await expect(controller.remove('ghost')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.remove('ghost', USER_ID)).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('DELETE /:id propagates ForbiddenException for system category', async () => {
-    mockDelete.execute.mockRejectedValue(new ForbiddenException('cannot delete system category'));
-    await expect(controller.remove('sys-id')).rejects.toBeInstanceOf(ForbiddenException);
+    mockDelete.execute.mockRejectedValue(new ForbiddenException('System categories cannot be deleted'));
+    await expect(controller.remove('sys-id', USER_ID)).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

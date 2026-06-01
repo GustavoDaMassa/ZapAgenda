@@ -1,6 +1,7 @@
 import { Appointment } from '../entities/appointment.entity';
 
 export interface AppointmentFilters {
+  userId: string;
   start?: Date;
   end?: Date;
   categoryId?: string;
@@ -9,7 +10,7 @@ export interface AppointmentFilters {
 export interface IAppointmentRepository {
   findAll(filters: AppointmentFilters): Promise<Appointment[]>;
   findById(id: string): Promise<Appointment | null>;
-  findOverlapping(startTime: Date, endTime: Date, excludeId?: string): Promise<Appointment[]>;
+  findOverlapping(startTime: Date, endTime: Date, userId: string, excludeId?: string): Promise<Appointment[]>;
   save(appointment: Appointment): Promise<void>;
   delete(id: string): Promise<void>;
 }
