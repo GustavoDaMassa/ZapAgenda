@@ -19,4 +19,7 @@ export default () => ({
   nlp: {
     url: process.env.NLP_SERVICE_URL ?? 'http://nlp:8000',
   },
+  whatsapp: {
+    authDir: process.env.WHATSAPP_AUTH_DIR ?? './baileys-auth',
+  },
 });
