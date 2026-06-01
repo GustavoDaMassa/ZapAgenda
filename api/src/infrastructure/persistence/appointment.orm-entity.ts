@@ -10,7 +10,7 @@ export class AppointmentOrmEntity {
   @Column()
   title: string;
 
-  @Column({ nullable: true, type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string | null;
 
   @Column({ name: 'start_time', type: 'timestamptz' })
@@ -34,7 +34,7 @@ export class AppointmentOrmEntity {
   @Column({ name: 'is_recurring', default: false })
   isRecurring: boolean;
 
-  @Column({ name: 'recurrence_rule', nullable: true })
+  @Column({ name: 'recurrence_rule', type: 'varchar', nullable: true })
   recurrenceRule: string | null;
 
   @Column({ name: 'is_cancelled', default: false })

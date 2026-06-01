@@ -42,5 +42,6 @@ import { QueueModule } from '../../infrastructure/queue/queue.module';
       inject: [REMINDER_REPOSITORY, APPOINTMENT_REPOSITORY],
     },
   ],
+  exports: [REMINDER_REPOSITORY],
 })
 export class RemindersModule {}
