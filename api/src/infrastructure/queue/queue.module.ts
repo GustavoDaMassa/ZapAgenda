@@ -7,18 +7,18 @@ import { REMINDER_QUEUE } from '../../domain/queue/reminder-queue.interface';
 @Module({
   providers: [
     RabbitMQService,
-    { provide: REMINDER_QUEUE, useClass: ReminderProducerService },
     {
       provide: ReminderProducerService,
       useFactory: (rabbitmq: RabbitMQService) => new ReminderProducerService(rabbitmq),
       inject: [RabbitMQService],
     },
+    { provide: REMINDER_QUEUE, useExisting: ReminderProducerService },
     {
       provide: ReminderConsumerService,
       useFactory: (rabbitmq: RabbitMQService) => new ReminderConsumerService(rabbitmq),
       inject: [RabbitMQService],
     },
   ],
-  exports: [REMINDER_QUEUE],
+  exports: [REMINDER_QUEUE, ReminderConsumerService],
 })
 export class QueueModule {}

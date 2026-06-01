@@ -6,6 +6,7 @@ import { AuthModule } from './presentation/modules/auth.module';
 import { CategoriesModule } from './presentation/modules/categories.module';
 import { AppointmentsModule } from './presentation/modules/appointments.module';
 import { RemindersModule } from './presentation/modules/reminders.module';
+import { WhatsAppModule } from './infrastructure/whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { RemindersModule } from './presentation/modules/reminders.module';
     CategoriesModule,
     AppointmentsModule,
     RemindersModule,
+    WhatsAppModule,
   ],
 })
 export class AppModule {}
