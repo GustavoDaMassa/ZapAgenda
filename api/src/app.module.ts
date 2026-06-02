@@ -6,6 +6,8 @@ import { AuthModule } from './presentation/modules/auth.module';
 import { CategoriesModule } from './presentation/modules/categories.module';
 import { AppointmentsModule } from './presentation/modules/appointments.module';
 import { RemindersModule } from './presentation/modules/reminders.module';
+import { TasksModule } from './presentation/modules/tasks.module';
+import { NotesModule } from './presentation/modules/notes.module';
 import { WhatsAppModule } from './infrastructure/whatsapp/whatsapp.module';
 
 @Module({
@@ -28,6 +30,8 @@ import { WhatsAppModule } from './infrastructure/whatsapp/whatsapp.module';
     CategoriesModule,
     AppointmentsModule,
     RemindersModule,
+    TasksModule,
+    NotesModule,
     WhatsAppModule,
   ],
 })
