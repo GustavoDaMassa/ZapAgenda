@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { AppointmentOrmEntity } from './appointment.orm-entity';
 
 @Entity('reminders')
@@ -10,6 +10,7 @@ export class ReminderOrmEntity {
   appointmentId: string;
 
   @ManyToOne(() => AppointmentOrmEntity)
+  @JoinColumn({ name: 'appointment_id' })
   appointment: AppointmentOrmEntity;
 
   @Column({ name: 'minutes_before', type: 'int' })

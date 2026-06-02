@@ -33,18 +33,19 @@ export class AppointmentRepository implements IAppointmentRepository {
   }
 
   async findOverlapping(startTime: Date, endTime: Date, userId: string, excludeId?: string): Promise<Appointment[]> {
-    const qb = this.repo
-      .createQueryBuilder('a')
-      .where('a.user_id = :userId', { userId })
-      .andWhere('a.is_cancelled = false')
-      .andWhere('a.start_time < :end AND (a.end_time IS NULL OR a.end_time > :start)', {
-        start: startTime,
-        end: endTime,
-      });
-
-    if (excludeId) qb.andWhere('a.id != :excludeId', { excludeId });
-
-    const rows = await qb.getMany();
+    const params: unknown[] = [userId, startTime, endTime];
+    let sql = `
+      SELECT * FROM appointments
+      WHERE user_id = $1
+        AND is_cancelled = false
+        AND start_time < $3
+        AND (end_time IS NULL OR end_time > $2)
+    `;
+    if (excludeId) {
+      params.push(excludeId);
+      sql += ` AND id != $${params.length}`;
+    }
+    const rows: AppointmentOrmEntity[] = await this.repo.query(sql, params);
     return rows.map(this.toDomain);
   }
 
