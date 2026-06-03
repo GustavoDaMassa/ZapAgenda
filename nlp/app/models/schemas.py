@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Any
 
 
 class Message(BaseModel):
@@ -33,7 +34,7 @@ class NoteEntities(BaseModel):
 
 class ProcessResponse(BaseModel):
     intent: str
-    entities: AppointmentEntities | TaskEntities | NoteEntities | dict
+    entities: dict[str, Any] = {}
     reply_text: str
     needs_confirmation: bool
     session_state: str
