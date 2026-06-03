@@ -8,7 +8,16 @@ import { CreateAppointmentUseCase } from '../../application/use-cases/appointmen
 import { CancelAppointmentUseCase } from '../../application/use-cases/appointment/cancel-appointment.use-case';
 import { UpdateAppointmentUseCase } from '../../application/use-cases/appointment/update-appointment.use-case';
 import { CreateReminderUseCase } from '../../application/use-cases/reminder/create-reminder.use-case';
+import { ListTasksUseCase } from '../../application/use-cases/task/list-tasks.use-case';
+import { CreateTaskUseCase } from '../../application/use-cases/task/create-task.use-case';
+import { UpdateTaskUseCase } from '../../application/use-cases/task/update-task.use-case';
+import { ListNotesUseCase } from '../../application/use-cases/note/list-notes.use-case';
+import { CreateNoteUseCase } from '../../application/use-cases/note/create-note.use-case';
 import { Appointment } from '../../domain/entities/appointment.entity';
+import { Task } from '../../domain/entities/task.entity';
+import { Note } from '../../domain/entities/note.entity';
+
+type Entities = Record<string, unknown>;
 
 export class WhatsAppHandler {
   private readonly logger = new Logger(WhatsAppHandler.name);
@@ -23,6 +32,11 @@ export class WhatsAppHandler {
     private readonly cancelAppointment: CancelAppointmentUseCase,
     private readonly updateAppointment: UpdateAppointmentUseCase,
     private readonly createReminder: CreateReminderUseCase,
+    private readonly listTasks: ListTasksUseCase,
+    private readonly createTask: CreateTaskUseCase,
+    private readonly updateTask: UpdateTaskUseCase,
+    private readonly listNotes: ListNotesUseCase,
+    private readonly createNote: CreateNoteUseCase,
   ) {
     this.baileys.setMessageHandler(this.handle.bind(this));
   }
@@ -47,13 +61,16 @@ export class WhatsAppHandler {
     let replyText = nlpResponse.reply_text;
 
     try {
-      if (nlpResponse.needs_confirmation) {
-        this.sessionStore.setPending(jid, nlpResponse.intent, nlpResponse.entities as Record<string, unknown>);
-      } else if (session.pendingIntent && this.isConfirmation(text)) {
-        replyText = await this.executePending(jid, user.id, session.pendingIntent!, session.pendingEntities);
+      const isPendingConfirmation = !!session.pendingIntent && this.isConfirmation(text);
+
+      if (isPendingConfirmation) {
+        replyText = await this.executePending(user.id, session.pendingIntent!, session.pendingEntities);
         this.sessionStore.clearPending(jid);
-      } else if (!nlpResponse.needs_confirmation) {
-        replyText = await this.executeIntent(nlpResponse.intent, nlpResponse.entities as Record<string, unknown>, user.id) ?? replyText;
+      } else if (nlpResponse.needs_confirmation) {
+        this.sessionStore.setPending(jid, nlpResponse.intent, nlpResponse.entities as Entities);
+      } else {
+        const result = await this.executeIntent(nlpResponse.intent, nlpResponse.entities as Entities, user.id);
+        if (result !== null) replyText = result;
         this.sessionStore.clearPending(jid);
       }
     } catch (err: any) {
@@ -66,63 +83,190 @@ export class WhatsAppHandler {
   }
 
   private isConfirmation(text: string): boolean {
-    return /^(sim|s|yes|confirmo|pode|ok)$/i.test(text.trim());
+    return /^(sim|s|yes|confirmo|pode|ok|certo|claro)$/i.test(text.trim());
   }
 
-  private async executePending(_jid: string, userId: string, intent: string, entities: Record<string, unknown>): Promise<string> {
+  private async executePending(userId: string, intent: string, entities: Entities): Promise<string> {
     return (await this.executeIntent(intent, entities, userId)) ?? 'Pronto!';
   }
 
-  private async executeIntent(intent: string, entities: Record<string, unknown>, userId: string): Promise<string | null> {
+  private async executeIntent(intent: string, entities: Entities, userId: string): Promise<string | null> {
     switch (intent) {
-      case 'create_appointment':
-        return this.handleCreate(entities, userId);
-      case 'query_appointments':
-        return this.handleQuery(userId);
-      case 'cancel_appointment':
-        return this.handleCancel(entities, userId);
-      default:
-        return null;
+      // --- Compromissos ---
+      case 'create_appointment':  return this.handleCreateAppointment(entities, userId);
+      case 'query_appointments':  return this.handleQueryAppointments(entities, userId);
+      case 'cancel_appointment':  return this.handleCancelAppointment(entities, userId);
+      case 'edit_appointment':
+      case 'reschedule':          return this.handleReschedule(entities, userId);
+
+      // --- Tarefas ---
+      case 'create_task':   return this.handleCreateTask(entities, userId);
+      case 'list_tasks':    return this.handleListTasks(userId);
+      case 'complete_task': return this.handleCompleteTask(entities, userId);
+
+      // --- Notas ---
+      case 'create_note': return this.handleCreateNote(entities, userId);
+      case 'list_notes':  return this.handleListNotes(userId);
+
+      default: return null;
     }
   }
 
-  private async handleCreate(entities: Record<string, unknown>, userId: string): Promise<string> {
+  // ── Compromissos ───────────────────────────────────────
+
+  private async handleCreateAppointment(entities: Entities, userId: string): Promise<string> {
     const startTime = this.parseDateTime(entities.date as string, entities.time as string);
     if (!startTime) return 'Não consegui identificar a data e hora. Pode repetir?';
 
     const appointment = await this.createAppointment.execute({
       title: (entities.title as string) ?? 'Compromisso',
       startTime,
-      categoryId: (entities.categoryId as string) ?? '',
+      categoryId: '',
       createdVia: 'whatsapp',
       userId,
     });
 
-    return `Compromisso "${appointment.title}" marcado para ${this.formatDate(appointment.startTime)}.`;
+    return `Compromisso "${appointment.title}" marcado para ${this.fmt(appointment.startTime)}.`;
   }
 
-  private async handleQuery(userId: string): Promise<string> {
+  private async handleQueryAppointments(entities: Entities, userId: string): Promise<string> {
+    const titleFilter = (entities.title as string | undefined)?.toLowerCase();
     const now = new Date();
-    const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const appointments = await this.listAppointments.execute({ start: now, end }, userId);
+    const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    if (appointments.length === 0) return 'Você não tem compromissos nos próximos 7 dias.';
+    const all = await this.listAppointments.execute({ start: now, end }, userId);
+    const filtered = titleFilter
+      ? all.filter((a: Appointment) => a.title.toLowerCase().includes(titleFilter))
+      : all.filter((a: Appointment) => !a.isCancelled);
 
-    const lines = appointments.slice(0, 5).map((a: Appointment) => `• ${a.title} — ${this.formatDate(a.startTime)}`);
+    if (filtered.length === 0) {
+      return titleFilter
+        ? `Não encontrei nenhum compromisso com "${entities.title}".`
+        : 'Você não tem compromissos nos próximos 30 dias.';
+    }
+
+    if (titleFilter && filtered.length === 1) {
+      const a = filtered[0];
+      return `"${a.title}" está marcado para ${this.fmt(a.startTime)}.`;
+    }
+
+    const lines = filtered.slice(0, 5).map((a: Appointment) => `• ${a.title} — ${this.fmt(a.startTime)}`);
     return `Seus próximos compromissos:\n${lines.join('\n')}`;
   }
 
-  private async handleCancel(entities: Record<string, unknown>, userId: string): Promise<string> {
-    const title = entities.title as string;
+  private async handleCancelAppointment(entities: Entities, userId: string): Promise<string> {
+    const title = (entities.title as string | undefined)?.toLowerCase();
     if (!title) return 'Qual compromisso você quer cancelar?';
 
-    const appointments = await this.listAppointments.execute({}, userId);
-    const match = appointments.find((a: Appointment) => a.title.toLowerCase().includes(title.toLowerCase()));
-    if (!match) return `Não encontrei nenhum compromisso com "${title}".`;
+    const all = await this.listAppointments.execute({}, userId);
+    const match = all.find((a: Appointment) => a.title.toLowerCase().includes(title) && !a.isCancelled);
+    if (!match) return `Não encontrei nenhum compromisso com "${entities.title}".`;
 
     await this.cancelAppointment.execute(match.id, userId);
     return `Compromisso "${match.title}" cancelado.`;
   }
+
+  private async handleReschedule(entities: Entities, userId: string): Promise<string> {
+    const title = (entities.title as string | undefined)?.toLowerCase();
+    if (!title) return 'Qual compromisso você quer remarcar?';
+
+    const newDate = (entities.new_date ?? entities.date) as string;
+    const newTime = (entities.new_time ?? entities.time) as string;
+    const startTime = this.parseDateTime(newDate, newTime);
+    if (!startTime) return 'Não consegui identificar a nova data e hora.';
+
+    const all = await this.listAppointments.execute({}, userId);
+    const match = all.find((a: Appointment) => a.title.toLowerCase().includes(title) && !a.isCancelled);
+    if (!match) return `Não encontrei nenhum compromisso com "${entities.title}".`;
+
+    await this.updateAppointment.execute(match.id, {
+      title: match.title,
+      startTime,
+      categoryId: match.categoryId,
+    }, userId);
+
+    return `"${match.title}" remarcado para ${this.fmt(startTime)}.`;
+  }
+
+  // ── Tarefas ────────────────────────────────────────────
+
+  private async handleCreateTask(entities: Entities, userId: string): Promise<string> {
+    const title = entities.title as string;
+    if (!title) return 'Qual o nome da tarefa?';
+
+    await this.createTask.execute({
+      title,
+      description: entities.description as string | undefined,
+      userId,
+    });
+
+    return `Tarefa "${title}" adicionada à sua lista.`;
+  }
+
+  private async handleListTasks(userId: string): Promise<string> {
+    const tasks = await this.listTasks.execute(userId);
+    const pending = tasks.filter((t: Task) => !t.isDone);
+    const done = tasks.filter((t: Task) => t.isDone);
+
+    if (tasks.length === 0) return 'Sua lista de tarefas está vazia.';
+
+    const lines: string[] = [];
+    if (pending.length > 0) {
+      lines.push('*Pendentes:*');
+      pending.slice(0, 5).forEach((t: Task) => lines.push(`○ ${t.title}`));
+    }
+    if (done.length > 0) {
+      lines.push('*Concluídas:*');
+      done.slice(0, 3).forEach((t: Task) => lines.push(`✓ ${t.title}`));
+    }
+
+    return lines.join('\n');
+  }
+
+  private async handleCompleteTask(entities: Entities, userId: string): Promise<string> {
+    const title = (entities.title as string | undefined)?.toLowerCase();
+    if (!title) return 'Qual tarefa você quer marcar como concluída?';
+
+    const tasks = await this.listTasks.execute(userId);
+    const match = tasks.find((t: Task) => t.title.toLowerCase().includes(title) && !t.isDone);
+    if (!match) return `Não encontrei a tarefa "${entities.title}" na sua lista.`;
+
+    await this.updateTask.execute(match.id, { isDone: true }, userId);
+    return `Tarefa "${match.title}" marcada como concluída! ✓`;
+  }
+
+  // ── Notas ──────────────────────────────────────────────
+
+  private async handleCreateNote(entities: Entities, userId: string): Promise<string> {
+    const title = entities.title as string;
+    const content = (entities.content as string) ?? '';
+    if (!title) return 'Qual o título da nota?';
+
+    await this.createNote.execute({ title, content, userId });
+    return `Nota "${title}" salva no seu bloco.`;
+  }
+
+  private async handleListNotes(userId: string): Promise<string> {
+    const notes = await this.listNotes.execute(userId);
+    if (notes.length === 0) return 'Seu bloco de notas está vazio.';
+
+    const pinned = notes.filter((n: Note) => n.isPinned);
+    const rest = notes.filter((n: Note) => !n.isPinned);
+
+    const lines: string[] = [];
+    if (pinned.length > 0) {
+      lines.push('*📌 Fixadas:*');
+      pinned.forEach((n: Note) => lines.push(`• ${n.title}: ${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}`));
+    }
+    if (rest.length > 0) {
+      lines.push('*Notas:*');
+      rest.slice(0, 5).forEach((n: Note) => lines.push(`• ${n.title}`));
+    }
+
+    return lines.join('\n');
+  }
+
+  // ── Utilitários ────────────────────────────────────────
 
   private parseDateTime(date: string | undefined, time: string | undefined): Date | null {
     if (!date) return null;
@@ -131,7 +275,11 @@ export class WhatsAppHandler {
     return isNaN(d.getTime()) ? null : d;
   }
 
-  private formatDate(date: Date): string {
-    return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short' });
+  private fmt(date: Date): string {
+    return date.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
   }
 }
