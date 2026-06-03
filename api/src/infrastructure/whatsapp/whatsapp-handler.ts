@@ -13,6 +13,7 @@ import { CreateTaskUseCase } from '../../application/use-cases/task/create-task.
 import { UpdateTaskUseCase } from '../../application/use-cases/task/update-task.use-case';
 import { ListNotesUseCase } from '../../application/use-cases/note/list-notes.use-case';
 import { CreateNoteUseCase } from '../../application/use-cases/note/create-note.use-case';
+import { ICategoryRepository } from '../../domain/repositories/category.repository.interface';
 import { Appointment } from '../../domain/entities/appointment.entity';
 import { Task } from '../../domain/entities/task.entity';
 import { Note } from '../../domain/entities/note.entity';
@@ -27,6 +28,7 @@ export class WhatsAppHandler {
     private readonly baileys: BaileysService,
     private readonly nlp: NlpClientService,
     private readonly userRepo: IUserRepository,
+    private readonly categoryRepo: ICategoryRepository,
     private readonly listAppointments: ListAppointmentsUseCase,
     private readonly createAppointment: CreateAppointmentUseCase,
     private readonly cancelAppointment: CancelAppointmentUseCase,
@@ -118,15 +120,28 @@ export class WhatsAppHandler {
     const startTime = this.parseDateTime(entities.date as string, entities.time as string);
     if (!startTime) return 'Não consegui identificar a data e hora. Pode repetir?';
 
+    const categoryId = await this.resolveCategory(entities.category as string | undefined, userId);
+
     const appointment = await this.createAppointment.execute({
       title: (entities.title as string) ?? 'Compromisso',
       startTime,
-      categoryId: '',
+      categoryId,
       createdVia: 'whatsapp',
       userId,
     });
 
     return `Compromisso "${appointment.title}" marcado para ${this.fmt(appointment.startTime)}.`;
+  }
+
+  private async resolveCategory(categoryHint: string | undefined, userId: string): Promise<string> {
+    const categories = await this.categoryRepo.findAll(userId);
+    if (categoryHint) {
+      const hint = categoryHint.toLowerCase();
+      const match = categories.find(c => c.name.toLowerCase().includes(hint));
+      if (match) return match.id;
+    }
+    const outros = categories.find(c => c.name.toLowerCase() === 'outros');
+    return outros?.id ?? categories[0]?.id ?? '';
   }
 
   private async handleQueryAppointments(entities: Entities, userId: string): Promise<string> {

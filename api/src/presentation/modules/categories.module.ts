@@ -36,5 +36,6 @@ import { AuthModule } from './auth.module';
       inject: [CATEGORY_REPOSITORY],
     },
   ],
+  exports: [CATEGORY_REPOSITORY],
 })
 export class CategoriesModule {}
