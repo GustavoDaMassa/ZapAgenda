@@ -38,6 +38,12 @@ Thumbs.db
 
 # Baileys session (credentials ficam no volume Docker)
 api/baileys_auth_info/
+api/baileys-auth/
+api/baileys-auth-dev/
+
+# Docs sensíveis (locais, não vão pro git)
+SERVER_GUIDE.md
+HOME_SERVER.md
 
 # Docker
 *.pid
