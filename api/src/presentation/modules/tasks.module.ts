@@ -20,5 +20,6 @@ import { AuthModule } from './auth.module';
     { provide: UpdateTaskUseCase, useFactory: (r: TaskRepository) => new UpdateTaskUseCase(r), inject: [TASK_REPOSITORY] },
     { provide: DeleteTaskUseCase, useFactory: (r: TaskRepository) => new DeleteTaskUseCase(r), inject: [TASK_REPOSITORY] },
   ],
+  exports: [TASK_REPOSITORY],
 })
 export class TasksModule {}

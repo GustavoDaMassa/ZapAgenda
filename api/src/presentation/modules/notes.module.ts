@@ -20,5 +20,6 @@ import { AuthModule } from './auth.module';
     { provide: UpdateNoteUseCase, useFactory: (r: NoteRepository) => new UpdateNoteUseCase(r), inject: [NOTE_REPOSITORY] },
     { provide: DeleteNoteUseCase, useFactory: (r: NoteRepository) => new DeleteNoteUseCase(r), inject: [NOTE_REPOSITORY] },
   ],
+  exports: [NOTE_REPOSITORY],
 })
 export class NotesModule {}
