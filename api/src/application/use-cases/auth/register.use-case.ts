@@ -8,6 +8,7 @@ import { LoginOutput } from './login.use-case';
 export interface RegisterInput {
   email: string;
   password: string;
+  whatsappJid?: string;
 }
 
 export class RegisterUseCase {
@@ -22,7 +23,7 @@ export class RegisterUseCase {
     if (existing) throw new ConflictException('E-mail já está em uso');
 
     const passwordHash = await this.bcrypt.hash(input.password);
-    const user = User.create(input.email, passwordHash);
+    const user = User.create(input.email, passwordHash, input.whatsappJid);
     await this.userRepo.save(user);
 
     const payload = { sub: user.id, email: user.email };

@@ -7,6 +7,7 @@ import { AppointmentsModule } from '../../presentation/modules/appointments.modu
 import { RemindersModule } from '../../presentation/modules/reminders.module';
 import { TasksModule } from '../../presentation/modules/tasks.module';
 import { NotesModule } from '../../presentation/modules/notes.module';
+import { CategoriesModule } from '../../presentation/modules/categories.module';
 import { AuthModule } from '../../presentation/modules/auth.module';
 import { QueueModule } from '../queue/queue.module';
 import { ReminderConsumerService } from '../queue/reminder-consumer.service';
@@ -14,6 +15,7 @@ import { USER_REPOSITORY } from '../../domain/repositories/user.repository.inter
 import { APPOINTMENT_REPOSITORY } from '../../domain/repositories/appointment.repository.interface';
 import { TASK_REPOSITORY } from '../../domain/repositories/task.repository.interface';
 import { NOTE_REPOSITORY } from '../../domain/repositories/note.repository.interface';
+import { CATEGORY_REPOSITORY } from '../../domain/repositories/category.repository.interface';
 import { REMINDER_REPOSITORY } from '../../domain/repositories/reminder.repository.interface';
 import { REMINDER_QUEUE } from '../../domain/queue/reminder-queue.interface';
 import { ListAppointmentsUseCase } from '../../application/use-cases/appointment/list-appointments.use-case';
@@ -39,7 +41,7 @@ const WA_LIST_NOTES         = Symbol('WA_ListNotesUseCase');
 const WA_CREATE_NOTE        = Symbol('WA_CreateNoteUseCase');
 
 @Module({
-  imports: [AppointmentsModule, RemindersModule, TasksModule, NotesModule, AuthModule, QueueModule],
+  imports: [AppointmentsModule, RemindersModule, TasksModule, NotesModule, CategoriesModule, AuthModule, QueueModule],
   providers: [
     BaileysService,
     NlpClientService,
@@ -60,18 +62,18 @@ const WA_CREATE_NOTE        = Symbol('WA_CreateNoteUseCase');
     {
       provide: WhatsAppHandler,
       useFactory: (
-        baileys: BaileysService, nlp: NlpClientService, userRepo: any,
+        baileys: BaileysService, nlp: NlpClientService, userRepo: any, categoryRepo: any,
         listAppt: any, createAppt: any, cancelAppt: any, updateAppt: any, createReminder: any,
         listTasks: any, createTask: any, updateTask: any,
         listNotes: any, createNote: any,
       ) => new WhatsAppHandler(
-        baileys, nlp, userRepo,
+        baileys, nlp, userRepo, categoryRepo,
         listAppt, createAppt, cancelAppt, updateAppt, createReminder,
         listTasks, createTask, updateTask,
         listNotes, createNote,
       ),
       inject: [
-        BaileysService, NlpClientService, USER_REPOSITORY,
+        BaileysService, NlpClientService, USER_REPOSITORY, CATEGORY_REPOSITORY,
         WA_LIST_APPOINTMENTS, WA_CREATE_APPOINTMENT, WA_CANCEL_APPOINTMENT,
         WA_UPDATE_APPOINTMENT, WA_CREATE_REMINDER,
         WA_LIST_TASKS, WA_CREATE_TASK, WA_UPDATE_TASK,

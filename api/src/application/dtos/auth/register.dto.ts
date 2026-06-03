@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'cliente@exemplo.com', description: 'E-mail do novo usuário (único no sistema)' })
@@ -11,4 +11,13 @@ export class RegisterDto {
   @IsNotEmpty()
   @MinLength(8)
   password: string;
+
+  @ApiPropertyOptional({
+    example: '5511999999999@s.whatsapp.net',
+    description: 'JID do WhatsApp para ativar o bot (formato: DDDDnúmero@s.whatsapp.net). Pode ser vinculado depois via PATCH /auth/link-whatsapp.',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d+@s\.whatsapp\.net$/, { message: 'whatsappJid deve estar no formato 5511999999999@s.whatsapp.net' })
+  whatsappJid?: string;
 }

@@ -6,6 +6,7 @@ import { AuthController } from '../controllers/auth.controller';
 import { LoginUseCase } from '../../application/use-cases/auth/login.use-case';
 import { RefreshUseCase } from '../../application/use-cases/auth/refresh.use-case';
 import { RegisterUseCase } from '../../application/use-cases/auth/register.use-case';
+import { LinkWhatsappUseCase } from '../../application/use-cases/auth/link-whatsapp.use-case';
 import { UserRepository } from '../../infrastructure/persistence/user.repository';
 import { UserOrmEntity } from '../../infrastructure/persistence/user.orm-entity';
 import { JwtServiceImpl } from '../../infrastructure/auth/jwt.service';
@@ -44,6 +45,11 @@ import { BCRYPT_SERVICE } from '../../infrastructure/auth/bcrypt.interface';
       useFactory: (repo: UserRepository, jwt: JwtServiceImpl, bcrypt: BcryptService) =>
         new RegisterUseCase(repo, jwt, bcrypt),
       inject: [USER_REPOSITORY, JWT_SERVICE, BCRYPT_SERVICE],
+    },
+    {
+      provide: LinkWhatsappUseCase,
+      useFactory: (repo: UserRepository) => new LinkWhatsappUseCase(repo),
+      inject: [USER_REPOSITORY],
     },
   ],
   exports: [JWT_SERVICE, BCRYPT_SERVICE, USER_REPOSITORY],
