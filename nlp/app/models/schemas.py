@@ -1,4 +1,3 @@
-from typing import Any
 from pydantic import BaseModel
 
 
@@ -22,9 +21,19 @@ class AppointmentEntities(BaseModel):
     recurrence: str | None = None
 
 
+class TaskEntities(BaseModel):
+    title: str | None = None
+    description: str | None = None
+
+
+class NoteEntities(BaseModel):
+    title: str | None = None
+    content: str | None = None
+
+
 class ProcessResponse(BaseModel):
     intent: str
-    entities: AppointmentEntities
+    entities: AppointmentEntities | TaskEntities | NoteEntities | dict
     reply_text: str
     needs_confirmation: bool
     session_state: str
