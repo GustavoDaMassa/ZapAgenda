@@ -30,17 +30,23 @@ export class BaileysService implements OnApplicationBootstrap {
     const authDir = this.config.get<string>('whatsapp.authDir') ?? './baileys-auth';
     const { state, saveCreds } = await useMultiFileAuthState(authDir);
 
-    this.socket = makeWASocket({ auth: state, printQRInTerminal: true });
+    this.socket = makeWASocket({ auth: state, printQRInTerminal: false });
 
     this.socket.ev.on('creds.update', saveCreds);
 
     this.socket.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-      if (qr) this.logger.log(`WhatsApp QR ready — scan to connect`);
-      if (connection === 'open') this.logger.log('WhatsApp connected');
+      if (qr) {
+        const encoded = encodeURIComponent(qr);
+        this.logger.log('════════════════════════════════════════');
+        this.logger.log('WHATSAPP QR — abra o link abaixo para escanear:');
+        this.logger.log(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`);
+        this.logger.log('════════════════════════════════════════');
+      }
+      if (connection === 'open') this.logger.log('✓ WhatsApp conectado com sucesso!');
       if (connection === 'close') {
         const code = (lastDisconnect?.error as Boom)?.output?.statusCode;
         const shouldReconnect = code !== DisconnectReason.loggedOut;
-        this.logger.warn(`WhatsApp disconnected (code ${code}), reconnect=${shouldReconnect}`);
+        this.logger.warn(`WhatsApp desconectado (code ${code}), reconectando=${shouldReconnect}`);
         if (shouldReconnect) this.connect();
       }
     });
